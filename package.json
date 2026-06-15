@@ -1,0 +1,24 @@
+{
+  "name": "reto-inetum-automatizacion-frontend",
+  "version": "1.0.0",
+  "description": "Reto de Automatización QA FrontEnd",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx cucumber-js"
+  },
+  "keywords": [
+    "qa",
+    "automation",
+    "playwright",
+    "cucumber",
+    "typescript"
+  ],
+  "author": "Maicol Aguilar",
+  "license": "ISC",
+  "dependencies": {
+    "@cucumber/cucumber": "^12.3.0",
+    "@playwright/test": "^1.57.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
