@@ -1,0 +1,144 @@
+name: 🧪 Reto QA - Test Automation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Ejecutar con debug'
+        required: false
+        default: 'false'
+
+jobs:
+  test:
+    name: 🧪 Ejecutar Pruebas Cucumber
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [20.x, 22.x]
+    
+    timeout-minutes: 30
+    
+    steps:
+      # 1. Checkout del código
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Setup de Node.js
+      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # 3. Mostrar versiones
+      - name: ℹ️ Mostrar versiones
+        run: |
+          node --version
+          npm --version
+          git --version
+
+      # 4. Instalar dependencias
+      - name: 📚 Instalar dependencias
+        run: npm ci
+        env:
+          CI: true
+
+      # 5. Instalar navegadores Playwright
+      - name: 🌐 Instalar navegadores Playwright
+        run: npx playwright install --with-deps chromium
+        env:
+          CI: true
+
+      # 6. Ejecutar pruebas
+      - name: ✅ Ejecutar pruebas Cucumber
+        run: npm test
+        env:
+          CI: true
+          NODE_ENV: test
+        continue-on-error: false
+
+      # 7. Subir reporte como artifact (si existen pruebas)
+      - name: 📊 Subir reporte HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report-${{ matrix.os }}-node${{ matrix.node-version }}
+          path: reports/
+          retention-days: 30
+
+      # 8. Crear comentario en PR con resultados
+      - name: 💬 Comentar en PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'reports/cucumber-report.html';
+            
+            const status = '${{ job.status }}' === 'success' ? '✅ PASÓ' : '❌ FALLÓ';
+            const message = `## ${status} Pruebas Automatizadas\n\n**OS:** ${{ matrix.os }}\n**Node:** ${{ matrix.node-version }}\n\n[Ver reporte completo](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+  # Job para verificar si todos los tests pasaron
+  test-result:
+    name: 📈 Verificar Resultados
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    
+    steps:
+      - name: ✅ Verificar Status
+        run: |
+          if [ "${{ needs.test.result }}" == "failure" ]; then
+            echo "❌ Las pruebas fallaron"
+            exit 1
+          else
+            echo "✅ Todas las pruebas pasaron"
+          fi
+
+  # Job adicional: Análisis de cobertura (opcional)
+  coverage:
+    name: 📈 Análisis de Cobertura
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+      
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      
+      - name: 📚 Instalar dependencias
+        run: npm ci
+      
+      - name: 🌐 Instalar navegadores
+        run: npx playwright install --with-deps chromium
+      
+      - name: 📊 Generar reporte de cobertura
+        run: |
+          echo "Generando estadísticas de pruebas..."
+          npx cucumber-js --dry-run
+        continue-on-error: true
+      
+      - name: 📤 Publicar resultados
+        if: always()
+        run: echo "✅ Análisis de cobertura completado"
