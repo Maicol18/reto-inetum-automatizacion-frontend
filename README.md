@@ -1,5 +1,11 @@
 # 🎯 Reto Inetum - Automatización Frontend QA
 
+[![🧪 Reto QA - Test Automation](https://github.com/Maicol18/reto-inetum-automatizacion-frontend/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Maicol18/reto-inetum-automatizacion-frontend/actions/workflows/test.yml)
+[![Node.js 22.x](https://img.shields.io/badge/Node.js-22.x-green)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Cucumber BDD](https://img.shields.io/badge/Cucumber-BDD-brightgreen)](https://cucumber.io/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.57-9945FF)](https://playwright.dev/)
+
 **Framework de Automatización de Pruebas de UI** para aplicación e-commerce SauceDemo usando **Cucumber BDD** con **Playwright** en **TypeScript**.
 
 ## 📋 Tabla de Contenidos
